@@ -60,6 +60,3 @@ def chooseBestFeatureToSplit(dataSet):
             bestFeature = i
     return bestFeature
 
-
-
-
