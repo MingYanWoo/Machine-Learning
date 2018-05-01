@@ -1,2 +1,2 @@
 # Machine-Learning
-Machine Learning source code with Python.
+Machine Learning source code written in Python.
