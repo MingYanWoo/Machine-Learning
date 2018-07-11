@@ -25,7 +25,7 @@ dataset_Y = train_data[['Survived']]
 # 划分训练集和验证集
 X_train, X_val, Y_train, Y_val = train_test_split(dataset_X.as_matrix(),
                                                   dataset_Y.as_matrix(),
-                                                  test_size=0.2,
+                                                  test_size=0,
                                                   random_state=42)
 
 # 归一化
@@ -34,15 +34,27 @@ X_train= preprocessing.MinMaxScaler().fit_transform(X_train)
 print('X_train: ', X_train.shape)
 print('Y_train: ', Y_train.shape)
 
-W = tf.Variable(tf.random_normal([7, 1]), name='weight')
-b = tf.Variable(tf.random_normal([1]), name='bias')
 X = tf.placeholder(tf.float32, shape=[None, 7])
 Y = tf.placeholder(tf.float32, shape=[None, 1])
 
-learning_rate = 0.05
+# layer1
+W1 = tf.Variable(tf.random_normal([7, 7]), name='weight1')
+b1 = tf.Variable(tf.random_normal([7]), name='bias1')
+layer1 = tf.sigmoid(tf.matmul(X, W1) + b1)
+
+# layer2
+W2 = tf.Variable(tf.random_normal([7, 7]), name='weight2')
+b2 = tf.Variable(tf.random_normal([7]), name='bias2')
+layer2 = tf.sigmoid(tf.matmul(layer1, W2) + b2)
+
+# layer3
+W3 = tf.Variable(tf.random_normal([7, 1]), name='weight3')
+b3 = tf.Variable(tf.random_normal([1]), name='bias3')
+
+learning_rate = 0.1
 
 # 假设函数
-hypothesis = tf.sigmoid(tf.matmul(X, W) + b)
+hypothesis = tf.sigmoid(tf.matmul(layer2, W3) + b3)
 # cost
 cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis))
 train = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -57,9 +69,9 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver(max_to_keep=1)
     feed = {X: X_train, Y: Y_train}
-    for step in range(100001):
+    for step in range(10001):
         sess.run(train, feed_dict=feed)
-        if step % 10000 == 0:
+        if step % 1000 == 0:
             saver.save(sess, 'model/titanic', global_step=step)
             print(step, sess.run(cost, feed_dict=feed))
 
@@ -103,7 +115,8 @@ with tf.Session() as sess:
         "Survived": p
     })
 
-    submission.to_csv("titanic-submission.csv", index=False)
+    submission.to_csv("titanic-NN-submission.csv", index=False)
+
 
     # 正确率
     official_data = pd.read_csv('gender_submission.csv')
@@ -116,4 +129,4 @@ with tf.Session() as sess:
         if offArr[i] == myArr[i]:
             counter = counter + 1
 
-    print 'test_accuracy: ', float(counter / len(offArr))
+    print 'test_accuracy: ', float(counter/len(offArr))
